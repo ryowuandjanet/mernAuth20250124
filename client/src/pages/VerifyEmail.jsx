@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { API_URL } from '../config';
 
 function VerifyEmail() {
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ function VerifyEmail() {
 
     setIsResending(true);
     try {
-      await axios.post('http://localhost:5000/api/users/resend-verification', {
+      await axios.post(`${API_URL}/api/users/resend-verification`, {
         email: user.email,
       });
 
@@ -48,7 +49,7 @@ function VerifyEmail() {
     e.preventDefault();
 
     try {
-      await axios.post('http://localhost:5000/api/users/verify-email', {
+      await axios.post(`${API_URL}/api/users/verify-email`, {
         email: user.email,
         code: verificationCode,
       });

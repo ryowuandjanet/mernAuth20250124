@@ -326,7 +326,7 @@ const forgotPassword = async (req, res) => {
     await user.save();
 
     // 重置密碼的連結
-    const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
     // 發送重置密碼郵件
     const mailOptions = {

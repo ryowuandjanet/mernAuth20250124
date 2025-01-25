@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import PasswordInput from '../components/PasswordInput';
+import { API_URL } from '../config';
 
 function Login() {
   const navigate = useNavigate();
@@ -15,10 +16,7 @@ function Login() {
     e.preventDefault();
 
     try {
-      const response = await axios.post(
-        'http://localhost:5000/api/users/login',
-        formData,
-      );
+      const response = await axios.post(`${API_URL}/api/users/login`, formData);
       const userData = response.data;
 
       localStorage.setItem('user', JSON.stringify(userData));

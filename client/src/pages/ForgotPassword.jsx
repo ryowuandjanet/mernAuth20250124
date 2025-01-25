@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { API_URL } from '../config';
 
 function ForgotPassword() {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ function ForgotPassword() {
     setIsSubmitting(true);
 
     try {
-      await axios.post('http://localhost:5000/api/users/forgot-password', {
+      await axios.post(`${API_URL}/api/users/forgot-password`, {
         email,
       });
       toast.success('重置密碼連結已發送到您的郵箱');

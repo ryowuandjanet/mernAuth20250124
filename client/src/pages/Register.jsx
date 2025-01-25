@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import PasswordInput from '../components/PasswordInput';
+import { API_URL } from '../config';
 
 function Register() {
   const navigate = useNavigate();
@@ -21,14 +22,11 @@ function Register() {
     }
 
     try {
-      const response = await axios.post(
-        'http://localhost:5000/api/users/register',
-        {
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-        },
-      );
+      const response = await axios.post(`${API_URL}/api/users/register`, {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+      });
 
       localStorage.setItem('user', JSON.stringify(response.data));
       toast.success('註冊成功！請查看您的郵箱進行驗證');

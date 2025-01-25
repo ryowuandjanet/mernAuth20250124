@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import PasswordInput from '../components/PasswordInput';
+import { API_URL } from '../config';
 
 function ResetPassword() {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ function ResetPassword() {
     setIsSubmitting(true);
 
     try {
-      await axios.post('http://localhost:5000/api/users/reset-password', {
+      await axios.post(`${API_URL}/api/users/reset-password`, {
         token,
         password: passwords.password,
       });
