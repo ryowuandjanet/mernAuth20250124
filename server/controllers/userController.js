@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -295,6 +296,129 @@ const resendVerification = async (req, res) => {
   }
 };
 
+// 生成重置密碼的 token
+const generateResetToken = () => {
+  return crypto.randomBytes(32).toString('hex');
+};
+
+// 忘記密碼
+const forgotPassword = async (req, res) => {
+  try {
+    console.log('Forgot password request received:', req.body);
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: '請提供電子郵件地址' });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: '此電子郵件未註冊' });
+    }
+
+    // 生成重置密碼的 token 和過期時間
+    const resetToken = generateResetToken();
+    const resetTokenExpires = new Date(Date.now() + 30 * 60000); // 30 分鐘後過期
+
+    // 更新用戶的重置密碼信息
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = resetTokenExpires;
+    await user.save();
+
+    // 重置密碼的連結
+    const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
+
+    // 發送重置密碼郵件
+    const mailOptions = {
+      from: {
+        name: '密碼重置',
+        address: process.env.EMAIL_USER,
+      },
+      to: email,
+      subject: '密碼重置請求',
+      html: `
+        <div style="padding: 20px; background-color: #f5f5f5;">
+          <div style="background-color: white; padding: 20px; border-radius: 10px;">
+            <h2 style="color: #4F46E5; margin-bottom: 20px;">密碼重置請求</h2>
+            <p style="font-size: 16px; color: #333;">親愛的用戶：</p>
+            <p style="font-size: 16px; color: #333;">我們收到了您的密碼重置請求。請點擊下方連結重置您的密碼：</p>
+            <div style="margin: 30px 0; text-align: center;">
+              <a href="${resetUrl}" 
+                 style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                重置密碼
+              </a>
+            </div>
+            <p style="font-size: 14px; color: #666;">
+              • 此連結將在 30 分鐘後過期<br>
+              • 如果這不是您的操作，請忽略此郵件
+            </p>
+          </div>
+        </div>
+      `,
+    };
+
+    try {
+      await transporter.verify();
+      console.log('SMTP connection verified');
+
+      const info = await transporter.sendMail(mailOptions);
+      console.log('Password reset email sent:', info.response);
+
+      res.json({
+        message: '重置密碼郵件已發送',
+        success: true,
+      });
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError);
+      res.status(500).json({
+        message: '發送重置密碼郵件失敗',
+        error: emailError.message,
+      });
+    }
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({
+      message: '處理忘記密碼請求失敗',
+      error: error.message,
+    });
+  }
+};
+
+// 重置密碼
+const resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res.status(400).json({ message: '缺少必要參數' });
+    }
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: '重置密碼連結無效或已過期' });
+    }
+
+    // 更新密碼
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(password, salt);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.json({ message: '密碼重置成功' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({
+      message: '重置密碼失敗',
+      error: error.message,
+    });
+  }
+};
+
 // 在啟動服務器時驗證 transporter
 transporter.verify(function (error, success) {
   if (error) {
@@ -304,4 +428,11 @@ transporter.verify(function (error, success) {
   }
 });
 
-export { register, login, verifyEmail, resendVerification };
+export {
+  register,
+  login,
+  verifyEmail,
+  resendVerification,
+  forgotPassword,
+  resetPassword,
+};
