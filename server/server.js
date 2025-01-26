@@ -84,14 +84,10 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 只在開發環境啟動服務器
-if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(
-      `Server running in ${process.env.NODE_ENV} mode on port ${PORT}`,
-    );
-  });
-}
+// 在所有環境下啟動服務器
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+});
 
 export default app;
