@@ -3,6 +3,9 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import connectDB from './config/db.js';
 import userRoutes from './routes/userRoutes.js';
+import caseRoutes from './routes/caseRoutes.js';
+import personRoutes from './routes/personRoutes.js';
+import debtorRoutes from './routes/debtorRoutes.js';
 
 dotenv.config();
 
@@ -60,6 +63,9 @@ try {
 
 // Routes
 app.use('/api/users', userRoutes);
+app.use('/api/cases', caseRoutes);
+app.use('/api', personRoutes);
+app.use('/api', debtorRoutes);
 
 // 404 處理
 app.use('*', (req, res) => {
