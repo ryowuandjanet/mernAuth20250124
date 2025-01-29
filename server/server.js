@@ -8,6 +8,7 @@ import personRoutes from './routes/personRoutes.js';
 import debtorRoutes from './routes/debtorRoutes.js';
 import landRoutes from './routes/landRoutes.js';
 import buildRoutes from './routes/buildRoutes.js';
+import surveyRoutes from './routes/surveyRoutes.js';
 
 dotenv.config();
 
@@ -70,6 +71,7 @@ app.use('/api', personRoutes);
 app.use('/api', debtorRoutes);
 app.use('/api', landRoutes);
 app.use('/api', buildRoutes);
+app.use('/api', surveyRoutes);
 
 // 404 處理
 app.use('*', (req, res) => {
