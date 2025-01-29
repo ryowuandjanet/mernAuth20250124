@@ -1,39 +1,26 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import PasswordInput from '../components/PasswordInput';
-import { API_URL } from '../config';
+import { API_URL } from '../../config';
 
-function ResetPassword() {
+function ForgotPassword() {
   const navigate = useNavigate();
-  const { token } = useParams();
-  const [passwords, setPasswords] = useState({
-    password: '',
-    confirmPassword: '',
-  });
+  const [email, setEmail] = useState('ryowu0329@gmail.com');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (passwords.password !== passwords.confirmPassword) {
-      toast.error('密碼不匹配');
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
-      await axios.post(`${API_URL}/api/users/reset-password`, {
-        token,
-        password: passwords.password,
+      await axios.post(`${API_URL}/api/users/forgot-password`, {
+        email,
       });
-
-      toast.success('密碼已重置成功');
+      toast.success('重置密碼連結已發送到您的郵箱');
       navigate('/login');
     } catch (error) {
-      toast.error(error.response?.data?.message || '重置密碼失敗');
+      toast.error(error.response?.data?.message || '發送重置密碼郵件失敗');
     } finally {
       setIsSubmitting(false);
     }
@@ -44,28 +31,21 @@ function ResetPassword() {
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
         <div>
           <h2 className="text-center text-3xl font-extrabold text-gray-900">
-            重置密碼
+            忘記密碼
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            請輸入您的新密碼
+            請輸入您的電子郵件地址，我們將發送重置密碼的連結給您。
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <PasswordInput
-              value={passwords.password}
-              onChange={(e) =>
-                setPasswords({ ...passwords, password: e.target.value })
-              }
-              placeholder="新密碼"
-            />
-            <PasswordInput
-              value={passwords.confirmPassword}
-              onChange={(e) =>
-                setPasswords({ ...passwords, confirmPassword: e.target.value })
-              }
-              placeholder="確認新密碼"
-              name="confirmPassword"
+          <div>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="電子郵件"
+              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
 
@@ -77,8 +57,17 @@ function ResetPassword() {
                 isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
-              {isSubmitting ? '重置中...' : '重置密碼'}
+              {isSubmitting ? '發送中...' : '發送重置連結'}
             </button>
+          </div>
+
+          <div className="text-center">
+            <Link
+              to="/login"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
+              返回登入
+            </Link>
           </div>
         </form>
       </div>
@@ -86,4 +75,4 @@ function ResetPassword() {
   );
 }
 
-export default ResetPassword;
+export default ForgotPassword;
