@@ -20,6 +20,12 @@ const FINAL_DECISION_OPTIONS = [
 // 添加轄區選項常數
 const WORK_AREA_OPTIONS = ['北基桃竹苗', '中彰投', '雲嘉南', '高屏'];
 
+// 添加執行結果選項常數
+const ACTION_RESULT_OPTIONS = ['未判定', '撤回', '第三人搶標', '得標'];
+
+// 添加搶標拍別選項常數
+const BID_AUCTION_OPTIONS = ['一拍', '二拍', '三拍', '四拍'];
+
 function CaseDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -91,6 +97,16 @@ function CaseDetail() {
     regionalHeadAddDate: '',
     regionalHeadWorkArea: '',
   });
+  const [actionResults, setActionResults] = useState([]);
+  const [showActionResultModal, setShowActionResultModal] = useState(false);
+  const [editingActionResult, setEditingActionResult] = useState(null);
+  const [actionResultFormData, setActionResultFormData] = useState({
+    stopBuyDate: '',
+    actionResult: '未判定',
+    bidAuctionTime: '',
+    bidMoney: '',
+    objectNumber: '',
+  });
 
   // 添加建物型選項常數
   const BUILD_TYPE_OPTIONS = [
@@ -142,6 +158,7 @@ function CaseDetail() {
           buildsResponse,
           surveysResponse,
           finalDecisionsResponse,
+          actionResultsResponse,
         ] = await Promise.all([
           axios.get(`${API_URL}/api/cases/${id}`),
           axios.get(`${API_URL}/api/case/${id}/persons`),
@@ -150,6 +167,7 @@ function CaseDetail() {
           axios.get(`${API_URL}/api/case/${id}/builds`),
           axios.get(`${API_URL}/api/case/${id}/surveys`),
           axios.get(`${API_URL}/api/case/${id}/finalDecisions`),
+          axios.get(`${API_URL}/api/case/${id}/actionResults`),
         ]);
         setCaseData(caseResponse.data);
         setPersons(personsResponse.data);
@@ -158,6 +176,7 @@ function CaseDetail() {
         setBuilds(buildsResponse.data);
         setSurveys(surveysResponse.data);
         setFinalDecisions(finalDecisionsResponse.data);
+        setActionResults(actionResultsResponse.data);
         setFormData(caseResponse.data);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -671,6 +690,152 @@ function CaseDetail() {
     });
     setShowFinalDecisionModal(true);
   };
+
+  // 修正處理編輯執行結果的函數
+  const handleEditActionResult = (actionResult) => {
+    console.log('Editing action result:', actionResult);
+    setEditingActionResult(actionResult);
+
+    // 設置初始表單數據
+    const initialFormData = {
+      stopBuyDate: actionResult.stopBuyDate
+        ? actionResult.stopBuyDate.split('T')[0]
+        : '',
+      actionResult: actionResult.actionResult,
+      bidAuctionTime:
+        actionResult.actionResult === '得標'
+          ? ''
+          : actionResult.bidAuctionTime || '',
+      bidMoney:
+        actionResult.actionResult === '得標' ? '' : actionResult.bidMoney || '',
+      objectNumber: actionResult.objectNumber || '',
+    };
+
+    console.log('Initial form data:', initialFormData);
+    setActionResultFormData(initialFormData);
+    setShowActionResultModal(true);
+  };
+
+  // 修正處理執行結果變更的函數
+  const handleActionResultChange = (value) => {
+    console.log('Changing action result to:', value);
+    console.log('Current form data:', actionResultFormData);
+
+    // 不管是新增還是編輯，都強制清空相關欄位
+    const newData = {
+      ...actionResultFormData,
+      actionResult: value,
+    };
+
+    if (value === '得標') {
+      // 選擇得標時，強制清空搶標相關欄位
+      newData.bidAuctionTime = '';
+      newData.bidMoney = '';
+      console.log('Clearing bid fields for 得標');
+    } else if (value === '第三人搶標') {
+      // 選擇第三人搶標時，清空標的編號
+      newData.objectNumber = '';
+      console.log('Clearing object number for 第三人搶標');
+    } else {
+      // 其他選項時清空所有相關欄位
+      newData.bidAuctionTime = '';
+      newData.bidMoney = '';
+      newData.objectNumber = '';
+      console.log('Clearing all fields for other options');
+    }
+
+    console.log('New form data:', newData);
+    setActionResultFormData(newData);
+  };
+
+  // 修改表單提交處理函數
+  const handleActionResultSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const submitData = {
+        ...actionResultFormData,
+        // 確保清空不需要的欄位
+        bidAuctionTime:
+          actionResultFormData.actionResult === '得標'
+            ? ''
+            : actionResultFormData.bidAuctionTime,
+        bidMoney:
+          actionResultFormData.actionResult === '得標'
+            ? ''
+            : actionResultFormData.bidMoney,
+        objectNumber:
+          actionResultFormData.actionResult === '第三人搶標'
+            ? ''
+            : actionResultFormData.objectNumber,
+      };
+
+      console.log('Submitting data:', submitData);
+
+      if (editingActionResult) {
+        // 更新現有記錄
+        await axios.put(
+          `${API_URL}/api/actionResults/${editingActionResult._id}`,
+          submitData,
+        );
+        toast.success('執行結果已更新');
+      } else {
+        // 創建新記錄
+        await axios.post(`${API_URL}/api/case/${id}/actionResults`, submitData);
+        toast.success('執行結果已新增');
+      }
+
+      // 重新獲取執行結果列表
+      const response = await axios.get(
+        `${API_URL}/api/case/${id}/actionResults`,
+      );
+      setActionResults(response.data);
+
+      // 關閉 Modal 並重置表單
+      setShowActionResultModal(false);
+      setEditingActionResult(null);
+      setActionResultFormData({
+        stopBuyDate: '',
+        actionResult: '未判定',
+        bidAuctionTime: '',
+        bidMoney: '',
+        objectNumber: '',
+      });
+    } catch (error) {
+      console.error('Error submitting action result:', error);
+      toast.error(
+        editingActionResult ? '更新執行結果失敗' : '新增執行結果失敗',
+      );
+    }
+  };
+
+  // 處理執行結果刪除
+  const handleDeleteActionResult = async (actionResultId) => {
+    if (window.confirm('確定要刪除此執行結果嗎？')) {
+      try {
+        await axios.delete(`${API_URL}/api/actionResults/${actionResultId}`);
+        toast.success('執行結果已刪除');
+        setActionResults(
+          actionResults.filter((ar) => ar._id !== actionResultId),
+        );
+      } catch (error) {
+        toast.error('刪除執行結果失敗');
+      }
+    }
+  };
+
+  // 確保表單重置時也正確處理欄位
+  useEffect(() => {
+    if (!showActionResultModal) {
+      setActionResultFormData({
+        stopBuyDate: '',
+        actionResult: '未判定',
+        bidAuctionTime: '',
+        bidMoney: '',
+        objectNumber: '',
+      });
+      setEditingActionResult(null);
+    }
+  }, [showActionResultModal]);
 
   if (!caseData) {
     return <div>載入中...</div>;
@@ -2273,6 +2438,229 @@ function CaseDetail() {
                       className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-md"
                     >
                       {editingFinalDecision ? '更新' : '新增'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* 執行結果清單 */}
+          <div className="mt-8">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">執行結果</h3>
+              <button
+                onClick={() => {
+                  setEditingActionResult(null);
+                  setActionResultFormData({
+                    stopBuyDate: '',
+                    actionResult: '未判定',
+                    bidAuctionTime: '',
+                    bidMoney: '',
+                    objectNumber: '',
+                  });
+                  setShowActionResultModal(true);
+                }}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              >
+                新增執行結果
+              </button>
+            </div>
+
+            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      應買止日
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      執行結果
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      搶標拍別
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      搶標金額
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      標的編號
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      操作
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {actionResults.map((actionResult) => (
+                    <tr key={actionResult._id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {actionResult.stopBuyDate
+                          ? new Date(
+                              actionResult.stopBuyDate,
+                            ).toLocaleDateString()
+                          : '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {actionResult.actionResult}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {actionResult.bidAuctionTime || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {actionResult.bidMoney || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {actionResult.objectNumber || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={() => handleEditActionResult(actionResult)}
+                          className="text-indigo-600 hover:text-indigo-900 mr-4"
+                        >
+                          編輯
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleDeleteActionResult(actionResult._id)
+                          }
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          刪除
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* 執行結果新增/編輯 Modal */}
+          {showActionResultModal && (
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+              <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  {editingActionResult ? '編輯執行結果' : '新增執行結果'}
+                </h3>
+                <form onSubmit={handleActionResultSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      應買止日
+                    </label>
+                    <input
+                      type="date"
+                      value={actionResultFormData.stopBuyDate}
+                      onChange={(e) =>
+                        setActionResultFormData({
+                          ...actionResultFormData,
+                          stopBuyDate: e.target.value,
+                        })
+                      }
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      執行結果
+                    </label>
+                    <select
+                      value={actionResultFormData.actionResult}
+                      onChange={(e) => handleActionResultChange(e.target.value)}
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                      required
+                    >
+                      {ACTION_RESULT_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* 只在選擇第三人搶標時顯示搶標相關欄位 */}
+                  {actionResultFormData.actionResult === '第三人搶標' && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          搶標拍別
+                        </label>
+                        <select
+                          value={actionResultFormData.bidAuctionTime}
+                          onChange={(e) =>
+                            setActionResultFormData({
+                              ...actionResultFormData,
+                              bidAuctionTime: e.target.value,
+                            })
+                          }
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                        >
+                          <option value="">請選擇拍別</option>
+                          {BID_AUCTION_OPTIONS.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          搶標金額
+                        </label>
+                        <input
+                          type="text"
+                          value={actionResultFormData.bidMoney || ''}
+                          onChange={(e) =>
+                            setActionResultFormData({
+                              ...actionResultFormData,
+                              bidMoney: e.target.value,
+                            })
+                          }
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                          placeholder="請輸入金額"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {/* 只在選擇得標時顯示標的編號欄位 */}
+                  {actionResultFormData.actionResult === '得標' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        標的編號
+                      </label>
+                      <input
+                        type="text"
+                        value={actionResultFormData.objectNumber}
+                        onChange={(e) =>
+                          setActionResultFormData({
+                            ...actionResultFormData,
+                            objectNumber: e.target.value,
+                          })
+                        }
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex justify-end space-x-4 mt-6">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowActionResultModal(false);
+                        setEditingActionResult(null);
+                      }}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 rounded-md border border-gray-300"
+                    >
+                      取消
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-md"
+                    >
+                      {editingActionResult ? '更新' : '新增'}
                     </button>
                   </div>
                 </form>
