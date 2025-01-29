@@ -466,6 +466,34 @@ function CaseDetail() {
   };
 
   // 處理勘查資訊表單提交
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // 添加 console.log 來檢查 API 回應
+        console.log('Fetching surveys data...');
+        const surveysResponse = await axios.get(
+          `${API_URL}/api/case/${id}/surveys`,
+        );
+        console.log('Surveys data:', surveysResponse.data);
+
+        // ... 其他資料獲取 ...
+
+        setSurveys(surveysResponse.data);
+      } catch (error) {
+        console.error('Error fetching surveys:', error);
+        toast.error('獲取勘查資訊失敗');
+      }
+    };
+
+    fetchData();
+  }, [id]);
+
+  // 添加 console.log 來檢查 surveys 狀態
+  useEffect(() => {
+    console.log('Current surveys state:', surveys);
+  }, [surveys]);
+
+  // 處理勘查資訊表單提交
   const handleSurveySubmit = async (e) => {
     e.preventDefault();
     try {

@@ -3,9 +3,12 @@ import Survey from '../models/surveyModel.js';
 // 獲取案件的所有勘查資訊
 export const getSurveysByCaseId = async (req, res) => {
   try {
+    console.log('Getting surveys for case:', req.params.caseId);
     const surveys = await Survey.find({ caseId: req.params.caseId });
+    console.log('Found surveys:', surveys);
     res.json(surveys);
   } catch (error) {
+    console.error('Error getting surveys:', error);
     res
       .status(500)
       .json({ message: '獲取勘查資訊列表失敗', error: error.message });
