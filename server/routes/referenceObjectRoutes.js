@@ -4,6 +4,9 @@ import {
   createReferenceObject,
   updateReferenceObject,
   deleteReferenceObject,
+  addScore,
+  updateScore,
+  deleteScore,
 } from '../controllers/referenceObjectController.js';
 
 const router = express.Router();
@@ -19,6 +22,11 @@ router.put('/referenceObjects/:id', updateReferenceObject);
 
 // 刪除特定參考物件
 router.delete('/referenceObjects/:id', deleteReferenceObject);
+
+// 評分相關路由
+router.post('/referenceObjects/:id/scores', addScore);
+router.put('/referenceObjects/:id/scores/:scoreId', updateScore);
+router.delete('/referenceObjects/:id/scores/:scoreId', deleteScore);
 
 export default router;
 // 或使用 CommonJS 語法：
