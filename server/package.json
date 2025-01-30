@@ -21,8 +21,5 @@
     "mongoose": "^8.9.5",
     "nodemailer": "^6.10.0",
     "nodemon": "^3.1.9"
-  },
-  "engines": {
-    "node": "18.x"
   }
 }

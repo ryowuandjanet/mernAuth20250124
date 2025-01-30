@@ -12,6 +12,7 @@ import BuildList from './assessmentForm/BuildList';
 import SurveyList from './assessmentForm/SurveyList';
 import FinalDecisionList from './assessmentForm/FinalDecisionList';
 import ActionResultList from './assessmentForm/ActionResultList';
+import ReferenceObjectList from './assessmentForm/ReferenceObjectList';
 
 // 添加最終判定選項常數
 const FINAL_DECISION_OPTIONS = [
@@ -105,6 +106,7 @@ function CaseDetail() {
     regionalHeadWorkArea: '',
   });
   const [actionResults, setActionResults] = useState([]);
+  const [referenceObjects, setReferenceObjects] = useState([]);
 
   // 添加建物型選項常數
   const BUILD_TYPE_OPTIONS = [
@@ -157,6 +159,7 @@ function CaseDetail() {
           surveysResponse,
           finalDecisionsResponse,
           actionResultsResponse,
+          referenceObjectsResponse,
         ] = await Promise.all([
           axios.get(`${API_URL}/api/cases/${id}`),
           axios.get(`${API_URL}/api/case/${id}/persons`),
@@ -166,6 +169,7 @@ function CaseDetail() {
           axios.get(`${API_URL}/api/case/${id}/surveys`),
           axios.get(`${API_URL}/api/case/${id}/finalDecisions`),
           axios.get(`${API_URL}/api/case/${id}/actionResults`),
+          axios.get(`${API_URL}/api/case/${id}/referenceObjects`),
         ]);
         setCaseData(caseResponse.data);
         setPersons(personsResponse.data);
@@ -175,6 +179,7 @@ function CaseDetail() {
         setSurveys(surveysResponse.data);
         setFinalDecisions(finalDecisionsResponse.data);
         setActionResults(actionResultsResponse.data);
+        setReferenceObjects(referenceObjectsResponse.data);
         setFormData(caseResponse.data);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -1024,6 +1029,12 @@ function CaseDetail() {
 
           {/* 替換原有的執行結果部分為新組件 */}
           <ActionResultList caseId={id} initialActionResults={actionResults} />
+
+          {/* 參考物件清單 */}
+          <ReferenceObjectList
+            caseId={id}
+            initialReferenceObjects={referenceObjects}
+          />
         </div>
       </main>
 

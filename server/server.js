@@ -11,6 +11,7 @@ import buildRoutes from './routes/buildRoutes.js';
 import surveyRoutes from './routes/surveyRoutes.js';
 import finalDecisionRoutes from './routes/finalDecisionRoutes.js';
 import actionResultRoutes from './routes/actionResultRoutes.js';
+import referenceObjectRoutes from './routes/referenceObjectRoutes.js';
 
 dotenv.config();
 
@@ -76,6 +77,7 @@ app.use('/api', buildRoutes);
 app.use('/api', surveyRoutes);
 app.use('/api', finalDecisionRoutes);
 app.use('/api', actionResultRoutes);
+app.use('/api', referenceObjectRoutes);
 
 // 404 處理
 app.use('*', (req, res) => {
