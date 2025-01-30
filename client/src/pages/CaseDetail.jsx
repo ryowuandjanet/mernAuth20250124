@@ -13,6 +13,7 @@ import SurveyList from './assessmentForm/SurveyList';
 import FinalDecisionList from './assessmentForm/FinalDecisionList';
 import ActionResultList from './assessmentForm/ActionResultList';
 import ReferenceObjectList from './assessmentForm/ReferenceObjectList';
+import AuctionList from './assessmentForm/AuctionList';
 
 // 添加最終判定選項常數
 const FINAL_DECISION_OPTIONS = [
@@ -107,6 +108,7 @@ function CaseDetail() {
   });
   const [actionResults, setActionResults] = useState([]);
   const [referenceObjects, setReferenceObjects] = useState([]);
+  const [auctions, setAuctions] = useState([]);
 
   // 添加建物型選項常數
   const BUILD_TYPE_OPTIONS = [
@@ -181,6 +183,12 @@ function CaseDetail() {
         setActionResults(actionResultsResponse.data);
         setReferenceObjects(referenceObjectsResponse.data);
         setFormData(caseResponse.data);
+
+        // 獲取拍賣資訊
+        const auctionsResponse = await axios.get(
+          `${API_URL}/api/case/${id}/auctions`,
+        );
+        setAuctions(auctionsResponse.data);
       } catch (error) {
         console.error('Error fetching data:', error);
         toast.error('獲取資料失敗');
@@ -694,6 +702,12 @@ function CaseDetail() {
     setShowFinalDecisionModal(true);
   };
 
+  // 計算總坪數
+  const totalArea = builds.reduce(
+    (sum, build) => sum + (build.calculatedArea || 0),
+    0,
+  );
+
   if (!caseData) {
     return <div>載入中...</div>;
   }
@@ -1034,6 +1048,14 @@ function CaseDetail() {
           <ReferenceObjectList
             caseId={id}
             initialReferenceObjects={referenceObjects}
+          />
+
+          {/* 拍賣資訊 */}
+          <AuctionList
+            caseId={id}
+            initialAuctions={auctions}
+            setAuctions={setAuctions}
+            totalArea={totalArea}
           />
         </div>
       </main>
