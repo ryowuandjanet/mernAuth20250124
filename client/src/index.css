@@ -1,1 +1,16 @@
-@import 'tailwindcss';
+/* 設置基本字體 */
+body {
+  font-family: 'Noto Sans TC', 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 英文使用 Roboto */
+.text-en {
+  font-family: 'Roboto', sans-serif;
+}
+
+/* 中文使用 Noto Sans TC */
+.text-zh {
+  font-family: 'Noto Sans TC', sans-serif;
+}

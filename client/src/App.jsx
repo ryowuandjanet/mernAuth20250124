@@ -1,11 +1,11 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import Register from './pages/auth/Register';
-import Login from './pages/auth/Login';
-import VerifyEmail from './pages/auth/VerifyEmail';
-import Dashboard from './pages/Dashboard';
-import ForgotPassword from './pages/auth/ForgotPassword';
-import ResetPassword from './pages/auth/ResetPassword';
+import Register from './pages/auth/Register/Register';
+import Login from './pages/auth/Login/Login';
+import VerifyEmail from './pages/auth/VerifyEmail/VerifyEmail';
+import Dashboard from './pages/Dashboard/Dashboard';
+import ForgotPassword from './pages/auth/ForgotPassword/ForgotPassword';
+import ResetPassword from './pages/auth/ResetPassword/ResetPassword';
 import ProtectedRoute from './components/ProtectedRoute';
 import CaseDetail from './pages/CaseDetail';
 

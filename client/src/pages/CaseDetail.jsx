@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { API_URL } from '../config';
-import Navbar from '../components/Navbar';
+import Navbar from '../components/Navbar/Navbar';
 import { convertToPing } from '../utils/calculate'; // 引入轉換函式
 import CreditorList from './assessmentForm/CreditorList';
 import DebtorList from './assessmentForm/DebtorList';
